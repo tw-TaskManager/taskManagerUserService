@@ -10,5 +10,7 @@ import (
 func HandleRequest(db *sql.DB) {
 	handler := mux.NewRouter()
 	handler.HandleFunc("/task/createUser", userHandler.CreateUserTask(db)).Methods("POST")
-	http.Handle("/",handler)
+	handler.HandleFunc("/task/login", userHandler.LoginUser(db)).Methods("POST")
+	handler.PathPrefix("/").Handler(http.FileServer(http.Dir("./public")))
+	http.Handle("/", handler)
 }
