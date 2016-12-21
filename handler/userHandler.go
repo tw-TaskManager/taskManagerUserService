@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"taskManagerUserService/model"
 	"taskManagerUserService/database"
-	"fmt"
 )
 
 func CreateUserTask(db *sql.DB) http.HandlerFunc {
@@ -67,23 +66,25 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 		user.UserName = *userInfo.UserName
 		user.Password = *userInfo.Password
 		emailId, err := database.Login(db, &user);
-		fmt.Println("email id",emailId)
 		if (err != nil) {
 			log.Fatalln("got error while featching user")
 			res.Write([]byte("got error while featching user"))
 			return
 		}
 
-		response := &contract.Response{}
-		response.Response = []byte(emailId)
-		emailId_to_send, err := proto.Marshal(response)
-
 		if (err != nil) {
 			log.Fatalln("got error while marsling user")
 			res.Write([]byte("got error while marsling user"))
 			return
 		}
-		res.Write([]byte(emailId_to_send))
+		//token := tokenGenerator.Generate(emailId)
+		cookie := http.Cookie{
+			Name:"taskManagerLogin",
+			Value:emailId,
+			Secure:true,
+		}
+		http.SetCookie(res, &cookie)
+		res.Write([]byte("/index.html"))
 
 	}
 }
