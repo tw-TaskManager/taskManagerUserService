@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"taskManagerUserService/model"
 	"taskManagerUserService/database"
+	"time"
 )
 
 func CreateUserTask(db *sql.DB) http.HandlerFunc {
@@ -78,13 +79,26 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		//token := tokenGenerator.Generate(emailId)
+		cookieLife := time.Now().Add(1 * 24 * time.Hour)
 		cookie := http.Cookie{
 			Name:"taskManagerLogin",
 			Value:emailId,
 			Secure:true,
+			Expires:cookieLife,
 		}
 		http.SetCookie(res, &cookie)
 		res.Write([]byte("/index.html"))
 
 	}
+}
+
+func Logout(res http.ResponseWriter, req *http.Request) {
+	cookieLife := time.Now().AddDate(-3, 0, 0)
+	cookie := http.Cookie{
+		Name:"taskManagerLogin",
+		Secure:true,
+		Expires:cookieLife,
+	}
+	http.SetCookie(res, &cookie)
+	res.Write([]byte("/index.html"))
 }
