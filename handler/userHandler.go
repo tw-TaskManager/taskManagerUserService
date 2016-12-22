@@ -24,7 +24,6 @@ func CreateUserTask(db *sql.DB) http.HandlerFunc {
 
 		userInfo := &contract.User{}
 		err = proto.Unmarshal(body, userInfo)
-
 		if (err != nil) {
 			log.Fatalln("got error while unmarsling")
 			return;
@@ -78,8 +77,7 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 			res.Write([]byte("got error while marsling user"))
 			return
 		}
-		//token := tokenGenerator.Generate(emailId)
-		cookieLife := time.Now().Add(1 * 24 * time.Hour)
+		cookieLife := time.Now().Add(-365 * 24 * time.Hour)
 		cookie := http.Cookie{
 			Name:"taskManagerLogin",
 			Value:emailId,
@@ -100,5 +98,5 @@ func Logout(res http.ResponseWriter, req *http.Request) {
 		Expires:cookieLife,
 	}
 	http.SetCookie(res, &cookie)
-	res.Write([]byte("/index.html"))
+	res.Write([]byte("logout"))
 }
