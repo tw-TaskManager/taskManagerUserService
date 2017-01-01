@@ -27,6 +27,9 @@ func Login(db *sql.DB, user *model.User) (string, error) {
 		row.Scan(&emailId)
 		userEmail = append(userEmail, emailId)
 	}
+	if(len(userEmail)==0) {
+		return "",nil
+	}
 	return userEmail[0], nil
 
 }

@@ -71,10 +71,8 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 			res.Write([]byte("got error while featching user"))
 			return
 		}
-
-		if (err != nil) {
-			log.Fatalln("got error while marsling user")
-			res.Write([]byte("got error while marsling user"))
+		if(emailId==""){
+			res.WriteHeader(http.StatusForbidden)
 			return
 		}
 		cookieLife := time.Now().Add(-365 * 24 * time.Hour)
