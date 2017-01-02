@@ -35,12 +35,11 @@ func CreateUserTask(db *sql.DB) http.HandlerFunc {
 		user.Password = *userInfo.Password
 		err = database.CreateUser(db, &user);
 		if (err != nil) {
-			log.Fatalln("got error while creating user")
-			res.Write([]byte("got error while creating user"))
+			res.WriteHeader(http.StatusConflict)
 			return
 		}
 
-		res.Write([]byte("user created"))
+		return
 
 	}
 }
@@ -83,7 +82,7 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 			Expires:cookieLife,
 		}
 		http.SetCookie(res, &cookie)
-		res.Write([]byte("/index.html"))
+		return
 
 	}
 }
@@ -96,5 +95,5 @@ func Logout(res http.ResponseWriter, req *http.Request) {
 		Expires:cookieLife,
 	}
 	http.SetCookie(res, &cookie)
-	res.Write([]byte("logout"))
+	return
 }
