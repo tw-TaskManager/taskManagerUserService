@@ -7,8 +7,6 @@ CREATE TABLE task_manager_user(
 );
 -- SQL in section 'Up' is executed when this migration is applied
 
-
 -- +goose Down
 DROP TABLE task_manager_user;
 -- SQL section 'Down' is executed when this migration is rolled back
-
