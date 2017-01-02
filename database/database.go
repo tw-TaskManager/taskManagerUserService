@@ -15,21 +15,25 @@ func CreateUser(db *sql.DB, user *model.User) error {
 	return nil
 }
 
-func Login(db *sql.DB, user *model.User) (string, error) {
-	row, queryErr := db.Query(`SELECT "emailId" from task_manager_user where "userName"=$1 and "password"=$2`, user.UserName, user.Password);
+func Login(db *sql.DB, user *model.User) (model.User, error) {
+	row, queryErr := db.Query(`SELECT "userName","password" from task_manager_user where "emailId"=$1`, user.EmailId);
 	if (queryErr != nil) {
 		fmt.Println(queryErr)
-		return "", queryErr
+		return model.User{}, queryErr
 	}
-	userEmail := make([]string, 0, 0)
+	userNameAndPassword := make([]model.User, 0, 0)
 	for row.Next() {
-		var emailId string
-		row.Scan(&emailId)
-		userEmail = append(userEmail, emailId)
+		var userName string
+		var password string
+		row.Scan(&userName, &password)
+		user := model.User{}
+		user.UserName = userName
+		user.Password = password
+		userNameAndPassword = append(userNameAndPassword, user)
 	}
-	if(len(userEmail)==0) {
-		return "",nil
+	if (len(userNameAndPassword) == 0) {
+		return model.User{}, nil
 	}
-	return userEmail[0], nil
+	return userNameAndPassword[0], nil
 
 }

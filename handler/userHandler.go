@@ -11,6 +11,8 @@ import (
 	"taskManagerUserService/model"
 	"taskManagerUserService/database"
 	"time"
+	"taskManagerUserService/encryption"
+	"fmt"
 )
 
 func CreateUserTask(db *sql.DB) http.HandlerFunc {
@@ -18,21 +20,24 @@ func CreateUserTask(db *sql.DB) http.HandlerFunc {
 		req.ParseForm()
 		body, err := ioutil.ReadAll(req.Body);
 		if (err != nil) {
-			log.Fatalln("got error while reading request")
+			log.Println(err.Error())
 			return;
 		}
 
 		userInfo := &contract.User{}
 		err = proto.Unmarshal(body, userInfo)
 		if (err != nil) {
-			log.Fatalln("got error while unmarsling")
+			log.Println(err.Error())
 			return;
 		}
-
+		password, err := encryption.GenerateHash(*userInfo.Password)
+		if (err != nil) {
+			return
+		}
 		user := model.User{}
 		user.UserName = *userInfo.UserName
 		user.EmailId = *userInfo.EmailId
-		user.Password = *userInfo.Password
+		user.Password = string(password[:])
 		err = database.CreateUser(db, &user);
 		if (err != nil) {
 			res.WriteHeader(http.StatusConflict)
@@ -49,7 +54,7 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 		req.ParseForm()
 		body, err := ioutil.ReadAll(req.Body)
 		if (err != nil) {
-			log.Fatalln("got error while reading request")
+			log.Println(err.Error())
 			return;
 		}
 
@@ -57,27 +62,34 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 		err = proto.Unmarshal(body, userInfo)
 
 		if (err != nil) {
-			log.Fatalln("got error while unmarsling")
+			log.Println(err.Error())
 			return;
 		}
-
-		user := model.User{}
-		user.UserName = *userInfo.UserName
-		user.Password = *userInfo.Password
-		emailId, err := database.Login(db, &user);
 		if (err != nil) {
-			log.Fatalln("got error while featching user")
+			return
+		}
+		user := model.User{}
+		user.EmailId = *userInfo.EmailId
+		userNameAndPassword, err := database.Login(db, &user);
+		if (err != nil) {
+			log.Println(err.Error())
 			res.Write([]byte("got error while featching user"))
 			return
 		}
-		if(emailId==""){
+		if (userNameAndPassword == model.User{}) {
+			res.WriteHeader(http.StatusForbidden)
+			return
+		}
+		err = encryption.Compare([]byte(userNameAndPassword.Password), []byte(*userInfo.Password))
+		if (err != nil) {
+			fmt.Println(err)
 			res.WriteHeader(http.StatusForbidden)
 			return
 		}
 		cookieLife := time.Now().Add(-365 * 24 * time.Hour)
 		cookie := http.Cookie{
 			Name:"taskManagerLogin",
-			Value:emailId,
+			Value:*userInfo.EmailId,
 			Secure:true,
 			Expires:cookieLife,
 		}
