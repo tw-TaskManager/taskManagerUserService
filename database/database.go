@@ -16,24 +16,26 @@ func CreateUser(db *sql.DB, user *model.User) error {
 }
 
 func Login(db *sql.DB, user *model.User) (model.User, error) {
-	row, queryErr := db.Query(`SELECT "userName","password" from task_manager_user where "emailId"=$1`, user.EmailId);
+	row, queryErr := db.Query(`SELECT "userName","password","userId" from task_manager_user where "emailId"=$1`, user.EmailId);
 	if (queryErr != nil) {
 		fmt.Println(queryErr)
 		return model.User{}, queryErr
 	}
-	userNameAndPassword := make([]model.User, 0, 0)
+	userInfo := make([]model.User, 0, 0)
 	for row.Next() {
 		var userName string
 		var password string
-		row.Scan(&userName, &password)
+		var userId int32
+		row.Scan(&userName, &password,&userId)
 		user := model.User{}
 		user.UserName = userName
 		user.Password = password
-		userNameAndPassword = append(userNameAndPassword, user)
+		user.UserId = userId
+		userInfo = append(userInfo, user)
 	}
-	if (len(userNameAndPassword) == 0) {
+	if (len(userInfo) == 0) {
 		return model.User{}, nil
 	}
-	return userNameAndPassword[0], nil
+	return userInfo[0], nil
 
 }

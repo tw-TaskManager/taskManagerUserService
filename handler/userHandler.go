@@ -70,17 +70,17 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 		}
 		user := model.User{}
 		user.EmailId = *userInfo.EmailId
-		userNameAndPassword, err := database.Login(db, &user);
+		validUser, err := database.Login(db, &user);
 		if (err != nil) {
 			log.Println(err.Error())
 			res.Write([]byte("got error while featching user"))
 			return
 		}
-		if (userNameAndPassword == model.User{}) {
+		if (validUser == model.User{}) {
 			res.WriteHeader(http.StatusForbidden)
 			return
 		}
-		err = encryption.Compare([]byte(userNameAndPassword.Password), []byte(*userInfo.Password))
+		err = encryption.Compare([]byte(validUser.Password), []byte(*userInfo.Password))
 		if (err != nil) {
 			fmt.Println(err)
 			res.WriteHeader(http.StatusForbidden)
@@ -89,7 +89,7 @@ func LoginUser(db *sql.DB) http.HandlerFunc {
 		cookieLife := time.Now().Add(-365 * 24 * time.Hour)
 		cookie := http.Cookie{
 			Name:"taskManagerLogin",
-			Value:*userInfo.EmailId,
+			Value:fmt.Sprint(validUser.UserId),
 			Secure:true,
 			Expires:cookieLife,
 		}
